@@ -19,8 +19,41 @@ public class Zones {
      * Is DAG in Main is 1 when the number of zones equals the number of cells (no cycle), so you do not need a separate check.
      */
     public static int[] kosaraju(Input.Slides s) {
-        // TODO
-        return new int[s.n()];
+        int n = s.n();
+        int[][] from = Graphs.slidesFrom(s), into = Graphs.slidesInto(s);
+        boolean[] seen = new boolean[n];
+        int[] order = new int[n], stack = new int[n], next = new int[n];
+        int orderSize = 0;
+        for (int start = 0; start < n; start++) {
+            if (seen[start]) continue;
+            int top = 0; stack[0] = start; next[0] = 0; seen[start] = true;
+            while (top >= 0) {
+                int u = stack[top];
+                if (next[top] < from[u].length) {
+                    int edge = from[u][next[top]++];
+                    int v = s.to()[edge];
+                    if (!seen[v]) { seen[v] = true; stack[++top] = v; next[top] = 0; }
+                } else {
+                    order[orderSize++] = u; top--;
+                }
+            }
+        }
+        int[] zoneOf = new int[n]; Arrays.fill(zoneOf, -1);
+        int zones = 0;
+        for (int i = orderSize - 1; i >= 0; i--) {
+            int start = order[i];
+            if (zoneOf[start] != -1) continue;
+            int top = 0; stack[0] = start; zoneOf[start] = zones;
+            while (top >= 0) {
+                int u = stack[top--];
+                for (int edge : into[u]) {
+                    int v = s.from()[edge];
+                    if (zoneOf[v] == -1) { zoneOf[v] = zones; stack[++top] = v; }
+                }
+            }
+            zones++;
+        }
+        return zoneOf;
     }
 
     /**
